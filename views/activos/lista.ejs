@@ -1,0 +1,66 @@
+<%-
+    include('../template/header', {
+        titulopestana: 'Activos',
+        origen: 'activos'
+    })
+%>
+
+<h2 class="text-center text-primary">Activos</h2>
+
+<a href="activos/crear" class="btn btn-primary btn-sm">Crear nuevo activo</a>
+
+<div class="overflow-auto">
+    <table class="table">
+        <tr>
+            <th>Compra</th>
+            <th>Nombre</th>
+            <th>Serial</th>
+            <th>Precio</th>
+            <th>Proveedor</th>
+            <th>Empleado</th>
+            <th>Condición</th>
+            <th>Ubicación</th>
+            <th></th>
+        </tr>
+        <% listado.forEach(item => { 
+            let empleado = ''
+            let ubicacion = ''
+            let condicion = ''
+            if(item.asignacion != null && item.asignacion.length > 0){
+                let primero = item.asignacion.find(f => f.devuelto == null)
+                if(primero != null)
+                {
+                    empleado = primero.empleado
+                    ubicacion = primero.ubicacion
+                }
+                let ultimo = item.asignacion.sort(s => s.entregado).reverse()[0]
+                if(ultimo != null)
+                {
+                    condicion = ultimo.condicionDevuelto == null ? ultimo.condicionEntrega : ultimo.condicionDevuelto
+                }
+            }
+        %>
+            <tr>
+                <td class="texto-fecha"><%= item.compra.toISOString().substr(0, 10) %></td>
+                <td><%=item.nombre%></td>
+                <td><%=item.serial%></td>
+                <td class="text-end"><%= new Intl.NumberFormat('en-US', {
+                            currency: 'USD',
+                            style: 'currency',
+                            minimumFractionDigits: 0
+                        }).format(item.precio) %></td>
+                <td><%=item.proveedor%></td>
+                <td><%=empleado%></td>
+                <td><%=condicion%></td>
+                <td><%=ubicacion%></td>
+                <td>
+                    <a href="activos/<%=item.id%>" class="btn btn-warning btn-sm">Modificar</a>
+                </td>
+            </tr>
+        <% }) %>
+    </table>
+</div>
+
+<%-
+    include('../template/footer')
+%>

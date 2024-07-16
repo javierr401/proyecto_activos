@@ -1,0 +1,115 @@
+<%-
+    include('../template/header', {
+        titulopestana: 'Modificar activo',
+        origen: 'activos'
+    })
+%>
+
+<h2 class="text-center text-primary">Activos</h2>
+
+<form action="/activos/<%= activo._id %>" method="post">
+    <div class="row">
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="datetime">Fecha de compra</label>
+            <input class="form-control" type="date" name="compra" id="compra" placeholder="fecha de compra" 
+                value="<%= activo.compra.toISOString().substr(0, 10) %>" >
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="tipo">Tipo de activo</label>
+            <select class="form-select" name="tipo" id="tipo">
+                <option value="" disabled <%= activo.tipo == null || activo.tipo == '' ? 'selected' : '' %>>...Tipo de activo...</option>
+                <% tipoActivos.forEach(tipo => { %>
+                    <option value="<%= tipo.nombre %>" <%= activo.tipo == tipo.nombre ? 'selected' : '' %>><%= tipo.nombre %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="nombre">Nombre del activo</label>
+            <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Nombre del activo" value="<%= activo.nombre %>">
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="factura">Número de factura</label>
+            <input class="form-control" type="text" name="factura" id="factura" placeholder="Número de factura" value="<%= activo.factura %>">
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="serial">Serial de producto</label>
+            <input class="form-control" type="text" name="serial" id="serial" placeholder="Serial de producto" value="<%= activo.serial %>">
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="proveedor">Proveedor</label>
+            <select class="form-select" name="proveedor" id="proveedor">
+                <option value="" disabled <%= activo.proveedor == null || activo.proveedor == '' ? 'selected' : '' %>>...Proveedor...</option>
+                <% proveedores.forEach(proveedor => { %>
+                    <option value="<%= proveedor.nombre %>" <%= activo.proveedor == proveedor.nombre ? 'selected' : '' %>><%= proveedor.nombre %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="precio">Precio de compra</label>
+            <input class="form-control" type="number" name="precio" id="precio" placeholder="Precio de compra" value="<%= activo.precio %>">
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 my-2">
+            <label for="identificador">Identificador interno</label>
+            <input class="form-control" type="text" name="identificador" id="identificador" placeholder="Identificador interno" 
+                value="<%= activo.identificador %>">
+        </div>
+    </div>
+    <div class="mt-1 mb-5 text-center">
+        <input type="submit" class="btn btn-success btn-sm" value="Guardar cambios">
+        <a href="/activos" class="btn btn-secondary btn-sm">Volver</a>
+    </div>
+    <hr>
+    <div class="mt-5 mb-5 ps-5 pe-5 overflow-auto">
+        <table class="table">
+            <tr>
+                <th class="text-end"><a href="" class="btn btn-primary btn-sm">Asignar</a></th>
+                <th class="texto-fecha">Entregado</th>
+                <th>Condición</th>
+                <th>Empleado</th>
+                <th>Ubicación</th>
+                <th class="texto-fecha">Devuelto</th>
+                <th>Condición</th>
+            </tr>
+            <% activo.asignacion.forEach(item => { %>
+                <tr>
+                    <td class="text-end">
+                        <% if(item.devuelto == null) { %>
+                            <a href="" class="btn btn-warning btn-sm">Reintegrar</a>
+                        <% } 
+                        else { %>
+                            <button type="button" class="btn btn-light btn-sm" disabled>Reintegrado</button>
+                        <% } %>
+                    </td>
+                    <td><%= item.entregado?.toISOString().substr(0, 10) %></td>
+                    <td><%= item.condicionEntrega %></td>
+                    <td><%= item.empleado %></td>
+                    <td><%= item.ubicacion %></td>
+                    <td><%= item.devuelto?.toISOString().substr(0, 10) %></td>
+                    <td><%= item.condicionDevuelto %></td>
+                </tr>
+            <% }) %>
+        </table>
+    </div>
+    <hr>
+    <div class="mt-5 mb-5 ps-5 pe-5 overflow-auto">
+        <table class="table">
+            <tr>
+                <th class="texto-fecha">Fecha</th>
+                <th>Asunto</th>
+                <th>Nota</th>
+                <th class="text-end"><a href="" class="btn btn-primary btn-sm">Nueva nota</a></th>
+            </tr>
+            <% activo.observaciones.forEach(item => { %>
+                <tr>
+                    <td><%= item.fecha?.toISOString().substr(0, 10) %></td>
+                    <td><%= item.tipo %></td>
+                    <td colspan="2"><%= item.descripcion %></td>
+                </tr>
+            <% }) %>
+        </table>
+    </div>
+</form>
+
+<%-
+    include('../template/footer')
+%>
