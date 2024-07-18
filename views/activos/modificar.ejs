@@ -59,10 +59,23 @@
         <a href="/activos" class="btn btn-secondary btn-sm">Volver</a>
     </div>
     <hr>
-    <div class="mt-5 mb-5 ps-5 pe-5 overflow-auto">
-        <table class="table">
+    <div class="mt-4 mb-5 ps-5 pe-5 overflow-auto">
+        <h3 class="text-info">Asignación</h3>
+        <table class="table table-bordered">
             <tr>
-                <th class="text-end"><a href="" class="btn btn-primary btn-sm">Asignar</a></th>
+                <th class="text-center">
+                    <%
+                        let asignado = true
+                        activo.asignacion.forEach(item => {
+                            if (item.devuelto != null) {
+                                asignado = false
+                            }
+                        })
+                        if (asignado) { %>
+                            <a href="" class="btn btn-info btn-sm text-light">Asignar</a>
+                        <% }
+                    %>
+                </th>
                 <th class="texto-fecha">Entregado</th>
                 <th>Condición</th>
                 <th>Empleado</th>
@@ -72,7 +85,7 @@
             </tr>
             <% activo.asignacion.forEach(item => { %>
                 <tr>
-                    <td class="text-end">
+                    <td class="text-center">
                         <% if(item.devuelto == null) { %>
                             <a href="" class="btn btn-warning btn-sm">Reintegrar</a>
                         <% } 
@@ -91,13 +104,26 @@
         </table>
     </div>
     <hr>
-    <div class="mt-5 mb-5 ps-5 pe-5 overflow-auto">
-        <table class="table">
+    <div class="mt-4 mb-5 ps-5 pe-5 overflow-auto" id="divNotas">
+        <h3 class="text-info">Notas</h3>
+        <table class="table table-bordered" id="notas">
             <tr>
                 <th class="texto-fecha">Fecha</th>
                 <th>Asunto</th>
-                <th>Nota</th>
-                <th class="text-end"><a href="" class="btn btn-primary btn-sm">Nueva nota</a></th>
+                <th style="border-color: transparent !important;">Nota</th>
+                <th class="text-end"><button type="button" class="btn btn-info btn-sm text-light" id="nuevaNota">Nueva nota</button></th>
+            </tr>
+            <tr class="oculto" id="escribirNota">
+                <td class="text-center">
+                    <button type="button" class="btn btn-success btn-sm" id="guardarNota">Guardar</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="cancelarNota">Cancelar</button>
+                </td>
+                <td>
+                    <input class="form-control" type="text" id="asunto">
+                </td>
+                <td colspan="2">
+                    <input class="form-control" type="text" id="nota">
+                </td>
             </tr>
             <% activo.observaciones.forEach(item => { %>
                 <tr>
@@ -109,6 +135,84 @@
         </table>
     </div>
 </form>
+
+<script>
+    const divNotas = document.getElementById('divNotas')
+    const nuevaNota = document.getElementById('nuevaNota')
+    const notas = document.getElementById('notas')
+    const escribirNota = document.getElementById('escribirNota')
+    const asunto = document.getElementById('asunto')
+    const nota = document.getElementById('nota')
+    const guardarNota = document.getElementById('guardarNota')
+    const cancelarNota = document.getElementById('cancelarNota')
+    
+    nuevaNota.addEventListener('click', () => {
+        asunto.value = ''
+        nota.value = ''
+        nuevaNota.classList.add('oculto')
+        escribirNota.classList.remove('oculto')
+    })
+    
+    cancelarNota.addEventListener('click', () => {
+        asunto.value = ''
+        nota.value = ''
+        nuevaNota.classList.remove('oculto')
+        escribirNota.classList.add('oculto')
+    })
+
+    guardarNota.addEventListener('click', async () => {
+        if (asunto.value == '' || nota.value == '') {
+            let p = document.createElement('p')
+            p.classList.add('alerta')
+            p.textContent = 'Ingrese un asunto y una nota'
+            divNotas.appendChild(p)
+            setTimeout(() => {
+                p.remove()
+            }, 5000);
+        }
+        else {
+            try {
+                const data = await fetch(`/activos/notas/<%= activo._id %>`, {
+                    method: 'put',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(
+                        { 
+                            asunto: asunto.value,
+                            nota: nota.value
+                        })
+                })
+                const respuesta = await data.json()
+                if (respuesta.estado) {
+                    let tr = document.createElement('tr')
+                    let tdFecha = document.createElement('td')
+                    let tdAsunto = document.createElement('td')
+                    let tdNota = document.createElement('td')
+
+                    tdFecha.textContent = respuesta.nota.fecha.substr(0, 10)
+                    tdAsunto.textContent = respuesta.nota.tipo
+                    tdNota.textContent = respuesta.nota.descripcion
+                    tdNota.setAttribute('colspan', '2')
+ 
+                    tr.appendChild(tdFecha)
+                    tr.appendChild(tdAsunto)
+                    tr.appendChild(tdNota)
+                    notas.querySelector('tbody').appendChild(tr)
+                    
+                    asunto.value = ''
+                    nota.value = ''
+                    nuevaNota.classList.remove('oculto')
+                    escribirNota.classList.add('oculto')
+                } else {
+                    console.log(respuesta)
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    })
+</script>
 
 <%-
     include('../template/footer')

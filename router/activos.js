@@ -89,25 +89,40 @@ router.post('/:id', async (request, response) => {
      }
 })
 
-// router.delete('/:id', async (request, response) => {
-//     const id = request.params.id
-//     try {
-//         const db = await Modelo.findByIdAndDelete({ _id: id })
-//         if (!db) {
-//             response.render('activos',{
-//                 mensaje: `No se pudo eliminar el registro '<b>${id}</b>'`
-//             })
-//         } else {
-//             response.render('activos',{
-//                 mensaje: `Registro eliminado`
-//             })
-//         }
-//     }
-//     catch (error) {
-//         response.render('activos',{
-//             mensaje: `No se pudo eliminar el registro '<b>${id}</b>'`
-//         })
-//     }
-// })
+
+
+router.put('/notas/:id', async (request, response) => {
+    const id = request.params.id
+    try {
+        let body = await Modelo.findOne({ _id: id })
+        let nuevaNota = {
+            descripcion: request.body.nota,
+            tipo: request.body.asunto,
+            fecha: Date.now()
+        }
+        body.observaciones.push(nuevaNota)
+        const db = await Modelo.findByIdAndUpdate(id, body, { useFindAndModify: false })
+        if (db == null) {
+            response.json({
+                estado: false,
+                mensaje: 'No se pudo crear la nota'
+            })
+        } else {
+            const activo = await Modelo.findOne({ _id: id })
+            response.json({
+                estado: true,
+                mensaje: 'Nota creada',
+                nota: activo.observaciones[activo.observaciones.length - 1]
+            })
+        }
+    }
+    catch (error) {
+        console.log(error)
+        response.json({
+            estado: false,
+            mensaje: 'No se pudo crear la nota'
+        })
+    }
+})
 
 module.exports = router

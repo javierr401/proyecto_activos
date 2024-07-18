@@ -29,3 +29,14 @@ nav li:hover {
 .texto-fecha {
     min-width: 100px;
 }
+
+.oculto {
+    display: none;
+}
+
+.alerta {
+    background-color: #fee7e7;
+    border-radius: 5px;
+    padding: 5px;
+    text-align: center;
+}
