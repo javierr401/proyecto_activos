@@ -1,0 +1,96 @@
+<%-
+    include('../template/header', {
+        titulopestana: 'Gatos'
+    })
+%>
+
+<h2 class="text-center text-primary">Gatos</h2>
+
+<div class="row" id="principal">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 my-2">
+        <label for="limit">Cantidad</label>
+        <input class="form-control" type="number" name="limit" id="limit" placeholder="¿Cuantos gatos quieres ver?" >
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 my-2">
+        <label for="size">Tamaño</label>
+        <select class="form-select" name="size" id="size">
+            <option value="" disabled selected>...¿De qué tamaño?...</option>
+            <option value="1">Pequeños</option>
+            <option value="2">Medianos</option>
+            <option value="3">Grandes</option>
+        </select>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 my-2 text-center">
+        <button type="button" id="ver" class="btn btn-primary">Agregar gatos</button>
+        <button type="button" id="limpiar" class="btn btn-secondary">Limpiar resultado</button>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 my-2 text-center">
+        <div id="resultado">
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const ver = document.getElementById('ver')
+    const limpiar = document.getElementById('limpiar')
+    const principal = document.getElementById('principal')
+    const limit = document.getElementById('limit')
+    const size = document.getElementById('size')
+    const resultado = document.getElementById('resultado')
+
+    limpiar.addEventListener('click', () => {
+        resultado.textContent = ''
+    })
+
+    ver.addEventListener('click', () => {
+        const lval = limit.value
+        const sval = size.value
+
+        if(lval == '' || sval == ''){
+            let p = document.createElement('p')
+            p.classList.add('alerta')
+            p.textContent = 'Ingrese una cantidad y un tamaño'
+            principal.appendChild(p)
+            setTimeout(() => {
+                p.remove()
+            }, 5000);
+        }
+        else {
+            const url = `https://api.thecatapi.com/v1/images/search?size=med&mime_types=jpg&format=json&has_breeds=true&order=RANDOM&page=0&limit=${lval}`
+            const key = 'live_jPDA2cw9UPF9AtIEstCyfpDG1coZuVrN5xAAkX94Kf4TAo5Y8XzUKLId8C0duy74'
+
+            fetch(url, { 
+                method: 'GET',
+                headers: new Headers({ "Content-Type": "application/json", "x-api-key": key }),
+                redirect: 'follow'
+            })
+            .then(response => response.json())
+            .then(gatos => {
+                gatos.forEach(gato => {
+                    let img = document.createElement('img')
+                    switch (sval) {
+                        case '1':
+                            img.classList.add('img-small')
+                            break;
+                        case '2':
+                            img.classList.add('img-med')
+                            break;
+                        case '3':
+                            img.classList.add('img-large')
+                            break;
+                        default:
+                            break;
+                    }
+                    img.setAttribute('src', gato.url)
+                    resultado.appendChild(img)
+                });
+            })
+            .catch(error => console.log('error', error)); 
+        } 
+    })
+</script>
+
+<%-
+    include('../template/footer')
+%>

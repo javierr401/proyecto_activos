@@ -27,6 +27,7 @@ app.use(express.static(__dirname + '/public'))
 
 app.use('/', require('./router/rutasWeb'))
 app.use('/activos', require('./router/activos'))
+app.use('/gatos', require('./router/gatos'))
 
 app.use((request, response, next) => {
     response.status(404).render('404.ejs', {

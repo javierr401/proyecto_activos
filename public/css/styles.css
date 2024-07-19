@@ -40,3 +40,8 @@ nav li:hover {
     padding: 5px;
     text-align: center;
 }
+
+.img-small { width: 200px; }
+.img-med { width: 400px; }
+.img-large { width: 600px; }
+#resultado img { border-radius: 3px; margin: 5px; }
