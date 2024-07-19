@@ -125,4 +125,69 @@ router.put('/notas/:id', async (request, response) => {
     }
 })
 
+router.put('/asignacion/:id', async (request, response) => {
+    const id = request.params.id
+    try {
+        let body = await Modelo.findOne({ _id: id })
+        let nuevaAsignacion = {
+            condicionEntrega: request.body.condicionEntrega,
+            empleado: request.body.empleado,
+            ubicacion: request.body.ubicacion,
+            entregado: Date.now()
+        }
+        body.asignacion.push(nuevaAsignacion)
+        const db = await Modelo.findByIdAndUpdate(id, body, { useFindAndModify: false })
+        if (db == null) {
+            response.json({
+                estado: false,
+                mensaje: 'No se pudo crear la asignacion'
+            })
+        } else {
+            const activo = await Modelo.findOne({ _id: id })
+            response.json({
+                estado: true,
+                mensaje: 'Asignación creada',
+                asignacion: activo.asignacion[activo.asignacion.length - 1]
+            })
+        }
+    }
+    catch (error) {
+        console.log(error)
+        response.json({
+            estado: false,
+            mensaje: 'No se pudo crear la asignacion'
+        })
+    }
+})
+
+router.put('/reintegro/:id', async (request, response) => {
+    const id = request.params.id
+    try {
+        let body = await Modelo.findOne({ _id: id })
+        body.asignacion[body.asignacion.length - 1].devuelto = Date.now()
+        body.asignacion[body.asignacion.length - 1].condicionDevuelto = request.body.condicionDevuelto
+        const db = await Modelo.findByIdAndUpdate(id, body, { useFindAndModify: false })
+        if (db == null) {
+            response.json({
+                estado: false,
+                mensaje: 'No se pudo registrar la devolución'
+            })
+        } else {
+            const activo = await Modelo.findOne({ _id: id })
+            response.json({
+                estado: true,
+                mensaje: 'Devolución registrada',
+                asignacion: activo.asignacion[activo.asignacion.length - 1]
+            })
+        }
+    }
+    catch (error) {
+        console.log(error)
+        response.json({
+            estado: false,
+            mensaje: 'No se pudo registrar la devolución'
+        })
+    }
+})
+
 module.exports = router

@@ -59,21 +59,20 @@
         <a href="/activos" class="btn btn-secondary btn-sm">Volver</a>
     </div>
     <hr>
-    <div class="mt-4 mb-5 ps-5 pe-5 overflow-auto">
+    <div class="mt-4 mb-5 ps-5 pe-5 overflow-auto" id="divAsignacion">
         <h3 class="text-info">Asignación</h3>
-        <table class="table table-bordered">
+        <table class="table table-bordered" id="asignacion">
             <tr>
                 <th class="text-center">
                     <%
-                        let asignado = true
+                        let asignado = false
                         activo.asignacion.forEach(item => {
-                            if (item.devuelto != null) {
-                                asignado = false
+                            if (item.devuelto == null) {
+                                asignado = true
                             }
-                        })
-                        if (asignado) { %>
-                            <a href="" class="btn btn-info btn-sm text-light">Asignar</a>
-                        <% }
+                        }) %>
+                        <button type="button" href="" class="btn btn-info btn-sm text-light <%= asignado ? 'oculto' : '' %>" id="nuevaAsignacion">Asignar</button>
+                        <button type="button" class="btn btn-light btn-sm oculto" id="nuevaAsignacionDisabled" disabled>Asignar</button>
                     %>
                 </th>
                 <th class="texto-fecha">Entregado</th>
@@ -83,11 +82,29 @@
                 <th class="texto-fecha">Devuelto</th>
                 <th>Condición</th>
             </tr>
+            <tr id="escribirAsignacion" class="oculto">
+                <td colspan="2"></td>
+                <td>
+                    <input class="form-control" type="text" id="condicion">
+                </td>
+                <td>
+                    <input class="form-control" type="text" id="empleado">
+                </td>
+                <td>
+                    <input class="form-control" type="text" id="ubicacion">
+                </td>
+                <td class="text-center" colspan="2">
+                    <button type="button" class="btn btn-success btn-sm" id="guardarAsignacion">Guardar</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="cancelarAsignacion">Cancelar</button>
+                </td>
+            </tr>
             <% activo.asignacion.forEach(item => { %>
                 <tr>
                     <td class="text-center">
                         <% if(item.devuelto == null) { %>
-                            <a href="" class="btn btn-warning btn-sm">Reintegrar</a>
+                            <button type="button" class="btn btn-warning btn-sm" id="reintegrar" onclick="reintegrarActivo()">Reintegrar</button>
+                            <button type="button" class="btn btn-success btn-sm oculto" id="guardarReintegro" onclick="guardarReintegroActivo()">Guardar</button>
+                            <button type="button" class="btn btn-danger btn-sm oculto" id="cancelarReintegro" onclick="cancelarReintegroActivo()">Cancelar</button>
                         <% } 
                         else { %>
                             <button type="button" class="btn btn-light btn-sm" disabled>Reintegrado</button>
@@ -98,7 +115,12 @@
                     <td><%= item.empleado %></td>
                     <td><%= item.ubicacion %></td>
                     <td><%= item.devuelto?.toISOString().substr(0, 10) %></td>
-                    <td><%= item.condicionDevuelto %></td>
+                    <td>
+                        <%= item.condicionDevuelto %>
+                        <% if(item.devuelto == null) { %>
+                            <input type="text" id="condicionDevuelto" class="form-control oculto">
+                        <% } %>
+                    </td>
                 </tr>
             <% }) %>
         </table>
@@ -212,6 +234,240 @@
             }
         }
     })
+
+
+
+    const divAsignacion = document.getElementById('divAsignacion')
+    const nuevaAsignacion = document.getElementById('nuevaAsignacion')
+    const nuevaAsignacionDisabled = document.getElementById('nuevaAsignacionDisabled')
+    const asignacion = document.getElementById('asignacion')
+    const escribirAsignacion = document.getElementById('escribirAsignacion')
+    const condicion = document.getElementById('condicion')
+    const empleado = document.getElementById('empleado')
+    const ubicacion = document.getElementById('ubicacion')
+    const guardarAsignacion = document.getElementById('guardarAsignacion')
+    const cancelarAsignacion = document.getElementById('cancelarAsignacion')
+    
+    nuevaAsignacion.addEventListener('click', () => {
+        condicion.value = ''
+        empleado.value = ''
+        ubicacion.value = ''
+        nuevaAsignacion.classList.add('oculto')
+        nuevaAsignacionDisabled.classList.remove('oculto')
+        escribirAsignacion.classList.remove('oculto')
+    })
+    
+    cancelarAsignacion.addEventListener('click', () => {
+        condicion.value = ''
+        empleado.value = ''
+        ubicacion.value = ''
+        nuevaAsignacion.classList.remove('oculto')
+        nuevaAsignacionDisabled.classList.add('oculto')
+        escribirAsignacion.classList.add('oculto')
+    })
+
+    guardarAsignacion.addEventListener('click', async () => {
+        if (condicion.value == '' || empleado.value == '' || ubicacion.value == '') {
+            let p = document.createElement('p')
+            p.classList.add('alerta')
+            p.textContent = 'Ingrese la condición, el elmpleado y la ubicación'
+            divAsignacion.appendChild(p)
+            setTimeout(() => {
+                p.remove()
+            }, 5000);
+        }
+        else {
+            try {
+                const data = await fetch(`/activos/asignacion/<%= activo._id %>`, {
+                    method: 'put',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(
+                        { 
+                            condicionEntrega: condicion.value,
+                            empleado: empleado.value,
+                            ubicacion: ubicacion.value
+                        })
+                })
+                const respuesta = await data.json()
+                if (respuesta.estado) {
+                    let tr = document.createElement('tr')
+                    let tdBoton = document.createElement('td')
+                    let tdFecha = document.createElement('td')
+                    let tdCondicion = document.createElement('td')
+                    let tdEmpleado = document.createElement('td')
+                    let tdUbicacion = document.createElement('td')
+                    let tdDevuelto = document.createElement('td')
+                    let tdCondicionD = document.createElement('td')
+
+                    let reintegrar = document.createElement('button')
+                    reintegrar.setAttribute('type', 'button')
+                    reintegrar.setAttribute('id', 'reintegrar')
+                    reintegrar.setAttribute('onclick', 'reintegrarActivo()')
+                    reintegrar.classList.add('btn')
+                    reintegrar.classList.add('btn-warning')
+                    reintegrar.classList.add('btn-sm')
+
+                    let guardarReintegro = document.createElement('button')
+                    guardarReintegro.setAttribute('type', 'button')
+                    guardarReintegro.setAttribute('id', 'guardarReintegro')
+                    guardarReintegro.setAttribute('onclick', 'guardarReintegroActivo()')
+                    guardarReintegro.classList.add('btn')
+                    guardarReintegro.classList.add('btn-success')
+                    guardarReintegro.classList.add('btn-sm')
+                    guardarReintegro.classList.add('oculto')
+
+                    let cancelarReintegro = document.createElement('button')
+                    cancelarReintegro.setAttribute('type', 'button')
+                    cancelarReintegro.setAttribute('id', 'cancelarReintegro')
+                    cancelarReintegro.setAttribute('onclick', 'cancelarReintegroActivo()')
+                    cancelarReintegro.classList.add('btn')
+                    cancelarReintegro.classList.add('btn-danger')
+                    cancelarReintegro.classList.add('btn-sm')
+                    cancelarReintegro.classList.add('oculto')
+
+                    if(document.querySelector('#guardarReintegro') != null){
+                        document.querySelector('#guardarReintegro').remove()
+                    }
+                    if(document.querySelector('#cancelarReintegro') != null){
+                        document.querySelector('#cancelarReintegro').remove()
+                    }
+                    if(document.querySelector('#reintegrar') != null){
+                        document.querySelector('#reintegrar').remove()
+                    }
+
+                    tdBoton.appendChild(guardarReintegro)
+                    tdBoton.appendChild(cancelarReintegro)
+                    tdBoton.appendChild(reintegrar)
+
+                    tdBoton.classList.add('text-center')
+
+                    tdFecha.textContent = respuesta.asignacion.entregado.substr(0, 10)
+                    tdCondicion.textContent = respuesta.asignacion.condicionEntrega
+                    tdEmpleado.textContent = respuesta.asignacion.empleado
+                    tdUbicacion.textContent = respuesta.asignacion.ubicacion
+
+                    let condicionDevuelto = document.createElement('input')
+                    condicionDevuelto.setAttribute('type', 'text')
+                    condicionDevuelto.setAttribute('id', 'condicionDevuelto')
+                    condicionDevuelto.classList.add('form-control')
+                    condicionDevuelto.classList.add('oculto')
+
+                    if(document.querySelector('#condicionDevuelto') != null){
+                        document.querySelector('#condicionDevuelto').remove()
+                    }
+
+                    tdCondicionD.appendChild(condicionDevuelto)
+ 
+                    tr.appendChild(tdBoton)
+                    tr.appendChild(tdFecha)
+                    tr.appendChild(tdCondicion)
+                    tr.appendChild(tdEmpleado)
+                    tr.appendChild(tdUbicacion)
+                    tr.appendChild(tdDevuelto)
+                    tr.appendChild(tdCondicionD)
+                    asignacion.querySelector('tbody').appendChild(tr)
+                    
+                    asignacion.querySelector('#reintegrar').textContent = 'Reintegrar'
+                    asignacion.querySelector('#guardarReintegro').textContent = 'Guardar'
+                    asignacion.querySelector('#cancelarReintegro').textContent = 'Cancelar'
+
+                    condicion.value = ''
+                    empleado.value = ''
+                    ubicacion.value = ''
+                    nuevaAsignacionDisabled.classList.add('oculto')
+                    escribirAsignacion.classList.add('oculto')
+                } else {
+                    console.log(respuesta)
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    })
+
+    function reintegrarActivo() {
+        const guardarReintegro = document.getElementById('guardarReintegro')
+        const cancelarReintegro = document.getElementById('cancelarReintegro')
+        const condicionDevuelto = document.getElementById('condicionDevuelto')
+        const reintegrar = document.getElementById('reintegrar')
+
+        reintegrar.classList.add('oculto')
+        guardarReintegro.classList.remove('oculto')
+        cancelarReintegro.classList.remove('oculto')
+        condicionDevuelto.classList.remove('oculto')
+        condicionDevuelto.value = ''
+    }
+
+    function cancelarReintegroActivo() {
+        const guardarReintegro = document.getElementById('guardarReintegro')
+        const cancelarReintegro = document.getElementById('cancelarReintegro')
+        const condicionDevuelto = document.getElementById('condicionDevuelto')
+        const reintegrar = document.getElementById('reintegrar')
+
+        reintegrar.classList.remove('oculto')
+        guardarReintegro.classList.add('oculto')
+        cancelarReintegro.classList.add('oculto')
+        condicionDevuelto.classList.add('oculto')
+        condicionDevuelto.value = ''
+    }
+
+    async function guardarReintegroActivo() {
+        let condicionDevuelto = document.getElementById('condicionDevuelto')
+        if (condicionDevuelto.value == '') {
+            let p = document.createElement('p')
+            p.classList.add('alerta')
+            p.textContent = 'Ingrese la condición'
+            divAsignacion.appendChild(p)
+            setTimeout(() => {
+                p.remove()
+            }, 5000);
+        }
+        else {
+            try {
+                const data = await fetch(`/activos/reintegro/<%= activo._id %>`, {
+                    method: 'put',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(
+                        { 
+                            condicionDevuelto: condicionDevuelto.value
+                        })
+                })
+                const respuesta = await data.json()
+                if (respuesta.estado) {
+                    asignacion.rows[asignacion.rows.length - 1].cells[5].textContent = respuesta.asignacion.devuelto.substr(0, 10)
+                    asignacion.rows[asignacion.rows.length - 1].cells[6].textContent = respuesta.asignacion.condicionDevuelto
+                    
+                    nuevaAsignacion.classList.remove('oculto')
+
+                    document.querySelector('#guardarReintegro').remove()
+                    document.querySelector('#cancelarReintegro').remove()
+                    document.querySelector('#reintegrar').remove()
+
+                    let btnReintegrado = document.createElement('button')
+                    btnReintegrado.setAttribute('type', 'button')
+                    btnReintegrado.setAttribute('disabled', 'disabled')
+                    btnReintegrado.classList.add('btn')
+                    btnReintegrado.classList.add('btn-reintegrado')
+                    btnReintegrado.classList.add('btn-light')
+                    btnReintegrado.classList.add('btn-sm')
+
+                    asignacion.rows[asignacion.rows.length - 1].cells[0].appendChild(btnReintegrado)
+
+                    let btns = document.getElementsByClassName('btn-reintegrado')
+                    btns[btns.length - 1].textContent = 'Reintegrado'
+                } else {
+                    console.log(respuesta)
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    }
+
 </script>
 
 <%-
