@@ -40,7 +40,7 @@
             }
         %>
             <tr>
-                <td class="texto-fecha"><%= item.compra.toISOString().substr(0, 10) %></td>
+                <td class="texto-fecha"><%= item.compra?.toISOString().substr(0, 10) %></td>
                 <td><%=item.nombre%></td>
                 <td><%=item.serial%></td>
                 <td class="text-end"><%= new Intl.NumberFormat('en-US', {
