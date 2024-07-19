@@ -1,0 +1,1 @@
+Página de inventario y asignación de activos
